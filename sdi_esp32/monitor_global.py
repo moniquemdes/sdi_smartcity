@@ -1,7 +1,8 @@
 import paho.mqtt.client as mqtt
 
+# ================= CONFIGURAÇÕES =================
 MQTT_BROKER = "3.131.158.173"
-# O símbolo '#' faz o script ouvir TODOS os tópicos do cruzamento de uma vez!
+# O '#' escuta todos os sub-tópicos de cruzamento_1
 TOPIC_ALL = "smartcity/cruzamento_1/#" 
 
 def on_connect(client, userdata, flags, rc):
@@ -17,27 +18,22 @@ def on_message(client, userdata, msg):
     topico = msg.topic
     payload = msg.payload.decode('utf-8')
     
-    # 1. Carros chegando (Deixei comentado para não poluir muito a tela, 
-    if "simulador" in topico:
-        pass 
-        # print(f"🚙 [SIMULADOR] enviou carro para -> {payload}")
+    # Início do bloco de comparação (Pedido recebido)
+    if "pedidos" in topico:
+        print(f"\n{'='*70}")
+        print(f"📡 FILAS ATUAIS: {payload}")
+        print("-" * 70)
         
-    # 2. O ESP32 pedindo uma decisão
-    elif "pedidos" in topico:
-        print(f"\n📡 [ESP32] Solicitando decisão! Filas: {payload}")
+    # Resultados (Alinhados para comparação fácil)
+    elif "status" in topico:
+        print(f"⚡ [BORDA]  {payload}")
         
-    # 3. O Controlador na Nuvem mandando a resposta
     elif "comandos" in topico:
-        dados = payload.split(',')
-        pista = dados[0]
-        tempo = dados[1]
-        print(f"🧠 [NUVEM] Respondeu: Abrir '{pista}' por {tempo}s")
+        print(f"🧠 [NUVEM]  Decisão: {payload}")
         
-    # 4. O ESP32 devolvendo o cálculo da latência!
     elif "latencia" in topico:
-        print(f"⏱️  [ESP32] CÁLCULO DE LATÊNCIA: A mensagem demorou {payload} para ir e voltar!")
-        print("=" * 50)
-        
+        print(f"☁️ [NUVEM]  Latência: {payload}")
+
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
